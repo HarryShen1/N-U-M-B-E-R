@@ -116,17 +116,17 @@ long long value_prepartitioned(int *solution, long long *instance, int n) {
 }
 
 pair<long long, int*> repeated_random(long long* instance, bool prepartitioned, int n) {
-    int *solution = generate_random_solution(n);
-    long long value = value_normal(solution, instance, n);
+    int *solution = prepartitioned ? generate_random_prepartition(n) : generate_random_solution(n);
+    long long value = prepartitioned ? value_prepartitioned(solution, instance, n) : value_normal(solution, instance, n);
     for (int i = 0; i < max_iter; i++) {
-        int *solution2 = generate_random_solution(n);
-        long long value2 = value_normal(solution2, instance, n);
+        int *solution2 = prepartitioned ? generate_random_prepartition(n) : generate_random_solution(n);
+        long long value2 =  prepartitioned ? value_prepartitioned(solution2, instance, n) : value_normal(solution2, instance, n);
         if (abs(value2) < abs(value)) {
             solution = solution2;
             value = value2;
         }
     }
-    return pair(value, solution); // TODO
+    return pair(abs(value), solution); // TODO
 }
 
 pair<long long, int*> hill_climbing(long long* instance, bool prepartitioned, int n) {
@@ -165,19 +165,25 @@ bool test_prob(int value, int value2, int i) {
 }
 
 pair<long long, int*> simulated_annealing(long long* instance, bool prepartitioned, int n) {
-    int *solution = generate_random_solution(n);
+    int *solution = prepartitioned ? generate_random_prepartition(n) : generate_random_solution(n);
     int *best = new int[n];
     copy(solution, solution + n, best);
 
-    long long value = value_normal(solution, instance, n);
+    long long value = prepartitioned ? value_prepartitioned(solution, instance, n) :  value_normal(solution, instance, n);
     long long best_value = value;
 
     cout << "\n";
     for (int i = 0; i < max_iter; i++) {
         // cout << i << ", " << best_value << "\n";
-        pair<int, int> move = generate_random_move(solution, n);
-        long long value2 = value + 2 * solution[move.first] * instance[move.first];
-        if (move.second != -1) value2 += 2 * solution[move.second] * instance[move.second];
+        pair<int, int> move = prepartitioned ? generate_random_prepartition_move(solution, n) : generate_random_move(solution, n);
+        long long value2;
+        if (!prepartitioned) {
+            value2 = value + 2 * solution[move.first] * instance[move.first];
+            if (move.second != -1) value2 += 2 * solution[move.second] * instance[move.second];
+        }
+        else {
+            value2 = value_prepartitioned(solution, instance, n);
+        }
 
         if (abs(value2) < abs(value)) {
             value = value2;
@@ -192,7 +198,7 @@ pair<long long, int*> simulated_annealing(long long* instance, bool prepartition
                 value = value2;
             }
             else {
-                undo_random_move(solution, move);
+                if (prepartitioned) undo_prep_move(solution, move); else undo_random_move(solution, move);
             }
         }
     }
@@ -218,7 +224,7 @@ long long *get_instance(string filename, int n) {
     long long *instance = new long long[n];
     for (int i = 0; i < n; i++) {
         getline(infile, value);
-        instance[i] = stoi(value);
+        instance[i] = stol(value);
     }
 
     return instance;
@@ -258,7 +264,7 @@ int main(int argc, const char * argv[]) {
         cout << p.first << "\n";
     }
     else if (flag == 1) {
-        int N = 14;
+        int N = 100;
 
         long long *instance;
 
@@ -278,25 +284,35 @@ int main(int argc, const char * argv[]) {
         cout << p.first << " : " << log(p.first) << "\n";
 
         cout << "\nVerifying: \n";
-        long long sum = 0;
-        for (int i = 0; i < N; i++) {
-            sum += p.second[i] * instance[i];
-        }
-        cout << log(abs(sum)) << "\n";
-        cout << "\nComparing to Our Function:\n";
-        cout << log(abs(value_normal(p.second, instance, N)));
-        cout << "\nComparing to Random Solution: \n"; 
+        if (algorithm < 10) {
+            
+            long long sum = 0;
+            for (int i = 0; i < N; i++) {
+                sum += p.second[i] * instance[i];
+            }
+            cout << log(abs(sum)) << "\n";
+            cout << "\nComparing to Our Function:\n";
+            cout << log(abs(value_normal(p.second, instance, N)));
+            cout << "\nComparing to Random Solution: \n"; 
 
-        int *sol = generate_random_solution(N);
-        sum = 0;
-        for (int i = 0; i < N; i++) {
-            sum += sol[i] * instance[i];
+            int *sol = generate_random_solution(N);
+            sum = 0;
+            for (int i = 0; i < N; i++) {
+                sum += sol[i] * instance[i];
+            }
+            cout << log(abs(sum)) << "\n";
         }
-        cout << log(abs(sum)) << "\n";
+        else {
+            long long value = value_prepartitioned(p.second, instance, N);
+            cout << log(abs(value)) << "\n";
+
+            cout << "\nComparing to Random Solution: \n"; 
+
+            int *sol = generate_random_prepartition(N);
+            cout << log(abs(value_prepartitioned(sol, instance, N))) << "\n";
+        }
     }
     else if (flag == 2) {
 
     }
 }
-
-
