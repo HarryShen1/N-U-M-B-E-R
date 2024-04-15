@@ -6,6 +6,7 @@
 #include <chrono>
 #include <fstream>
 #include <array>
+#include <queue>
 
 using namespace std;
 using namespace std::chrono;
@@ -96,7 +97,18 @@ long long* transform_instance(int *solution, long long *instance, int n) {
 
 // Algs themselves
 long long karmarkar_karp(long long *instance, int n) {
-    return -1; // TODO
+    priority_queue<long long> maxHeap;
+    for (int i = 0;i<n;i++){ 
+        maxHeap.push(instance[i]); 
+    }
+    while (maxHeap.size() > 1){
+        long long largest1 = maxHeap.top();
+        maxHeap.pop();
+        long long largest2 = maxHeap.top();
+        maxHeap.pop();
+        maxHeap.push(largest1-largest2);
+    }
+    return maxHeap.top(); // TODO
 }
 
 long long value_prepartitioned(int *solution, long long *instance, int n) {
@@ -104,7 +116,17 @@ long long value_prepartitioned(int *solution, long long *instance, int n) {
 }
 
 pair<long long, int*> repeated_random(long long* instance, bool prepartitioned, int n) {
-    return pair(-1, nullptr); // TODO
+    int *solution = generate_random_solution(n);
+    long long value = value_normal(solution, instance, n);
+    for (int i = 0; i < max_iter; i++) {
+        int *solution2 = generate_random_solution(n);
+        long long value2 = value_normal(solution2, instance, n);
+        if (abs(value2) < abs(value)) {
+            solution = solution2;
+            value = value2;
+        }
+    }
+    return pair(value, solution); // TODO
 }
 
 pair<long long, int*> hill_climbing(long long* instance, bool prepartitioned, int n) {
