@@ -126,7 +126,7 @@ pair<long long, int*> repeated_random(long long* instance, bool prepartitioned, 
             value = value2;
         }
     }
-    return pair(abs(value), solution); // TODO
+    return pair(abs(value), solution); 
 }
 
 pair<long long, int*> hill_climbing(long long* instance, bool prepartitioned, int n) {
@@ -172,7 +172,7 @@ pair<long long, int*> simulated_annealing(long long* instance, bool prepartition
     long long value = prepartitioned ? value_prepartitioned(solution, instance, n) :  value_normal(solution, instance, n);
     long long best_value = value;
 
-    cout << "\n";
+    // cout << "\n";
     for (int i = 0; i < max_iter; i++) {
         // cout << i << ", " << best_value << "\n";
         pair<int, int> move = prepartitioned ? generate_random_prepartition_move(solution, n) : generate_random_move(solution, n);
@@ -313,6 +313,29 @@ int main(int argc, const char * argv[]) {
         }
     }
     else if (flag == 2) {
+        long long *kk = new long long[50];
+        long long *rr = new long long[50];
+        long long *rrp = new long long[50];
+        long long *hc = new long long[50];
+        long long *hcp = new long long[50];
+        long long *sa = new long long[50];
+        long long *sap = new long long [50];
 
+        for (int i = 0; i < 50; i++) {
+            cerr << i << "\n";
+            long long *instance = generate_random_instance(100);
+            kk[i] = karmarkar_karp(instance, 100);
+            rr[i] = repeated_random(instance, false, 100).first;
+            rrp[i] = repeated_random(instance, true, 100).first;
+            hc[i] = hill_climbing(instance, false, 100).first;
+            hcp[i] = hill_climbing(instance, true, 100).first;
+            sa[i] = simulated_annealing(instance, false, 100).first;
+            sap[i] = simulated_annealing(instance, true, 100).first;
+        }
+
+        cout << "KK, RR, HC, SA, RR-P, HC-P, SA-P\n";
+        for (int i = 0; i < 50; i++) {
+            cout << kk[i] << ", " << rr[i] << ", " << hc[i] << ", " << sa[i] << ", " << rrp[i] << ", " << hcp[i] << ", " << sap[i] << "\n";
+        }
     }
 }
